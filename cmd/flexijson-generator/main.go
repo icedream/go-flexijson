@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -66,15 +65,10 @@ func main() {
 					case *ast.StructType:
 						for _, field := range typedType.Fields.List {
 							if field.Tag != nil {
-								fmt.Printf("Does %s match? ", field.Tag.Value)
 								if extraRx.MatchString(field.Tag.Value) {
-									fmt.Println("YES")
 									// that's an extra field
 									typeMeta.ExtraFieldName = field.Names[0].Name
 									break
-								} else {
-									fmt.Println("NO")
-
 								}
 							}
 						}
