@@ -68,6 +68,8 @@ func Test_SomeStruct(t *testing.T) {
 		// Test recursive struct data
 		So(data.Sub, ShouldNotBeNil)
 		So(data.Sub.A, ShouldEqual, "hi")
+		So(data.Sub.B, ShouldBeEmpty)
+
 		// Test recursive struct extra fields
 		So(data.Sub.Fields, ShouldNotBeNil)
 		So(len(data.Fields), ShouldBeGreaterThanOrEqualTo, 1)
