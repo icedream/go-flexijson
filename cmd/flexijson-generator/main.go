@@ -36,6 +36,7 @@ var (
 func main() {
 	kingpin.MustParse(cli.Parse(os.Args[1:]))
 
+	// Parse input go code
 	fileSet := token.NewFileSet()
 	astFile, err := parser.ParseFile(fileSet, *cliFlagSourcePath, nil, parser.AllErrors)
 	if err != nil {
@@ -49,18 +50,20 @@ func main() {
 
 	meta.PackageName = astFile.Name.Name
 
+	// loop through parsed declarations
 	for _, declaration := range astFile.Decls {
 		switch typedDeclaration := declaration.(type) {
-		case *ast.GenDecl:
+		case *ast.GenDecl: // import, constant, type or variable declaration
+			// loop through specifications
 			for _, spec := range typedDeclaration.Specs {
 				switch typedSpec := spec.(type) {
-				case *ast.TypeSpec:
+				case *ast.TypeSpec: // type declaration
 					typeMeta := typeMetadata{
 						TargetTypeName:   typedSpec.Name.Name,
 						WrappingTypeName: strings.ToUpper(typedSpec.Name.Name[0:1]) + typedSpec.Name.Name[1:],
 					}
 
-					// Find extra field name
+					// Find extra field name if any exists
 					switch typedType := typedSpec.Type.(type) {
 					case *ast.StructType:
 						for _, field := range typedType.Fields.List {
@@ -75,6 +78,7 @@ func main() {
 						break
 					}
 
+					// Add type to metadata for template
 					meta.Types = append(meta.Types, typeMeta)
 					break
 				}
@@ -83,16 +87,19 @@ func main() {
 		}
 	}
 
+	// generate output source code using template
 	err = wrappingClassTemplate.Execute(output, meta)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// format output source code
 	formattedBytes, err := format.Source(output.Bytes())
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// write output source code to output file
 	outputFile, err := os.Create(*cliFlagOutputFile)
 	if err != nil {
 		log.Fatal(err)
